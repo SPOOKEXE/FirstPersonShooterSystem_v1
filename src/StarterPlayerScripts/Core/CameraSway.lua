@@ -67,12 +67,12 @@ function Module:Init( otherSystems )
 		Humanoid = newCharacter and newCharacter:WaitForChild('Humanoid', 3)
 		if Humanoid then
 			Humanoid.Died:Connect(task.delay, 3, function()
-				Module:Disable()
+				Module:UnlockCamera()
 			end)
 			Humanoid.Running:Connect(function(speed)
 				HumanoidSpeed = speed
 			end)
-			Module:Enable()
+			Module:LockCamera()
 		end
 	end
 
