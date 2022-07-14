@@ -20,21 +20,30 @@ local CurrentCamera = workspace.CurrentCamera
 
 local SystemsContainer = {}
 
-local Humanoid, HumanoidSpeed = false, 1
-
+-- walking / running
 local UpdateSpeed = 8
 local xAmp = 0.2
 local yAmp = 2.5
 local SpeedDivisor = 36
 
+local Humanoid, HumanoidSpeed = false, 1
+
+-- jump power
+local zAmp = -0.8 -- negative = up direction first
+local jumpForceAmp = 0.95
+local jumpForceDecay = 0.955
+local activeJumpShove = 0
+
 local function UpdateLocalSway(dt)
-	if Humanoid and Humanoid.Health > 0 and Humanoid.MoveDirection.Magnitude > 0 then
+	if Humanoid and Humanoid.Health > 0 and (Humanoid.MoveDirection.Magnitude > 0 or activeJumpShove > 0) then
 		local xDelta = xAmp * math.sin(time() * UpdateSpeed) * dt * (HumanoidSpeed / SpeedDivisor)
 		local yDelta = yAmp * math.cos(time() * UpdateSpeed) * dt * (HumanoidSpeed / SpeedDivisor)
-		CameraSpring.shove( Vector3.new(xDelta, yDelta, 0) )
+		local zDelta = zAmp * math.sin(time() * UpdateSpeed) * dt * (activeJumpShove / jumpForceAmp)
+		activeJumpShove *= jumpForceDecay
+		CameraSpring.shove( Vector3.new(xDelta, yDelta, zDelta) )
 	end
 	local update = CameraSpring.update(dt)
-	TweenService:Create(CurrentCamera, TweenInfo.new(dt * 1.5), {CFrame = CurrentCamera.CFrame * CFrame.Angles(0, update.X, update.Y)}):Play()
+	TweenService:Create(CurrentCamera, TweenInfo.new(dt * 1.45), {CFrame = CurrentCamera.CFrame * CFrame.Angles(update.Z, update.X, update.Y)}):Play()
 end
 
 -- // Module // --
@@ -72,6 +81,11 @@ function Module:Init( otherSystems )
 			Humanoid.Running:Connect(function(speed)
 				HumanoidSpeed = speed
 			end)
+			Humanoid:GetPropertyChangedSignal('Jump'):Connect(function()
+				if Humanoid.Jump then
+					activeJumpShove = jumpForceAmp
+				end
+			end)
 			Module:LockCamera()
 		end
 	end
@@ -88,6 +102,15 @@ function Module:Init( otherSystems )
 			end
 		end
 	end, false, Enum.KeyCode.X)
+
+	ContextActionService:BindAction('ShiftToSprint', function(actionName, inputState, _)
+		if actionName == 'ShiftToSprint' and Humanoid then
+			local startedRunning = (inputState == Enum.UserInputState.Begin)
+			Humanoid.WalkSpeed = startedRunning and 26 or 16
+			xAmp = startedRunning and 0.4 or 0.2
+		end
+	end, false, Enum.KeyCode.LeftShift, Enum.KeyCode.RightShift)
+
 end
 
 return Module

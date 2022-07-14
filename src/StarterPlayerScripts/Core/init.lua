@@ -1,1 +1,1 @@
-return require( game:GetService('ReplicatedStorage'):WaitForChild('Cacher') ).Setup( script )
+return require( game:GetService('ReplicatedStorage'):WaitForChild('Cacher') )( script )

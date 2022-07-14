@@ -15,6 +15,9 @@ Module.Weapons = {
 	{
 		ID = 'G36C',
 		Model = 'G36C',
+		Type = 'Gun',
+
+		Slot = 1, -- Primary Gun
 		HandleRotation = CFrame.Angles( math.rad(-90), 0, 0 ),
 
 		-- Bullet Damage
@@ -50,6 +53,9 @@ Module.Weapons = {
 	{
 		ID = 'Glock19',
 		Model = 'Glock19',
+		Type = 'Gun',
+
+		Slot = 2, -- secondary
 		HandleRotation = CFrame.Angles( math.rad(-90), math.rad( 90 ), 0 ),
 
 		-- Bullet Damage
@@ -81,6 +87,35 @@ Module.Weapons = {
 			Shoot = 0,
 		},
 
+	},
+	{
+		ID = 'MeleeMace',
+		Model = 'MeleeMace',
+		Type = 'Melee',
+
+		Slot = 3, -- melee
+		HandleRotation = CFrame.Angles( math.rad(-90), math.rad( 90 ), 0 ),
+
+		-- Melee Damage {min charge, max charge} : rounded to nearest
+		Damage = {
+			Head = {5, 25},
+			UpperTorso = {5, 15},
+			LowerTorso = {5, 10},
+			Default = {5, 8},
+		},
+
+		Melee = {
+			ChargeTime = 2, -- charging time
+			Reach = 2, -- studs of reach
+			Cooldown = 0.5, -- cooldown in-between attacks
+		},
+
+		Sounds = {
+			Equip = 0,
+			Unequip = 0,
+			Charge = 0,
+			Hit = 0,
+		},
 	},
 }
 
