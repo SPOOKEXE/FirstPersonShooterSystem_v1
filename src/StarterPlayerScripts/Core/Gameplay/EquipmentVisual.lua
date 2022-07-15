@@ -3,10 +3,16 @@ local ContextActionService = game:GetService('ContextActionService')
 
 local Players = game:GetService('Players')
 local LocalPlayer = Players.LocalPlayer
+local LocalModules = require(LocalPlayer:WaitForChild('PlayerScripts'):WaitForChild('Modules'))
+
+local GunStateMachineClass = LocalModules.Classes.GunStateMachine
 
 local ReplicatedStorage = game:GetService('ReplicatedStorage')
 local ReplicatedAssets = ReplicatedStorage:WaitForChild('Assets')
+local ReplicatedCore = require(ReplicatedStorage:WaitForChild('Core'))
 local ReplicatedModules = require(ReplicatedStorage:WaitForChild('Modules'))
+
+local ReplicatedData = ReplicatedCore.ReplicateData
 
 local RemoteService = ReplicatedModules.Services.RemoteService
 local EquipmentFunction = RemoteService:GetRemote('EquipmentFunction', 'RemoteFunction', false)
@@ -21,9 +27,19 @@ local SystemsContainer = {}
 -- // Module // --
 local Module = {}
 
--- Equip a certain gun model for a player
--- Changes the model of the current equipped weapon to the
--- model found by this equippedID
+--[[
+	run the unequip animation and keep limbs offscreen
+	until equip animation is called
+]]
+function Module:UpdateStateMachine()
+	print('update state machine')
+end
+
+--[[
+	Equip a certain gun model for a player
+	Changes the model of the current equipped weapon to the
+	model found by this equippedID
+]]
 local EquippedCache = {}
 function Module:SetEquipped( PlayerInstance, equippedID )
 	warn('Change model / animations / etc to fit weapon of type : ', equippedID)
@@ -50,19 +66,11 @@ function Module:SetEquipped( PlayerInstance, equippedID )
 	ModelInstance:SetPrimaryPartCFrame(PlayerInstance.Character.RightHand.CFrame * rotationCFrame)
 	ModelUtility:WeldConstraint(ModelInstance.PrimaryPart, PlayerInstance.Character.RightHand)
 	ModelInstance.Parent = PlayerInstance.Character
-
 	EquippedCache[PlayerInstance] = ModelInstance
-end
 
--- run the unequip animation and keep limbs offscreen
--- until equip animation is called
-function Module:UnequipAnimation()
-	print('unequip animation - lower priority')
-end
-
--- run the equip animation and bring the tool back onto the screen
-function Module:EquipAnimation()
-	print('equip animation - higher priority')
+	if PlayerInstance == LocalPlayer then
+		Module:UpdateStateMachine()
+	end
 end
 
 function Module:Equip( keycodeEnum )
@@ -87,6 +95,11 @@ end
 function Module:Init( otherSystems )
 	SystemsContainer = otherSystems
 
+	task.defer(function()
+		-- default to the melee
+		Module:Equip(Enum.KeyCode.Three)
+	end)
+
 	-- Primary, Secondary, Melee, Equipment, Utility Pack, Extra
 	local SlotNumbers = {Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, Enum.KeyCode.Four, Enum.KeyCode.Five, Enum.KeyCode.Six}
 
@@ -98,8 +111,6 @@ function Module:Init( otherSystems )
 		return Enum.ContextActionResult.Pass
 	end, false, unpack(SlotNumbers))
 
-	-- default to the melee
-	Module:Equip(Enum.KeyCode.Three)
 end
 
 return Module
