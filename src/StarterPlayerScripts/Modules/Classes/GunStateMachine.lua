@@ -12,6 +12,8 @@ function Module.New()
 	local Events = {
 		Equip = EventClass.New(),
 		Unequip = EventClass.New(),
+		Walk = EventClass.New(),
+		Ran = EventClass.New(),
 
 		Aimed = EventClass.New(),
 		Reload = EventClass.New(),
@@ -19,7 +21,9 @@ function Module.New()
 	}
 
 	local FiniteStateInstance = FiniteStateMachineClass.create({
-		initial = {state = "unequip", event = "init", defer = true},
+
+		initial = { state = "unequip", event = "init", defer = true },
+
 		events = {
 			-- to unequip state
 			{name = "Unequip", from = "unequip", to = "unequip"},
@@ -39,15 +43,34 @@ function Module.New()
 			{name = "Idled", from = "inspect", to = "idle"},
 			{name = "Idled", from = "reload", to = "idle"},
 			{name = "Idled", from = "aim", to = "idle"},
+			-- from idle/aim/reload/run to run
+			{name = "Ran", from = "idle", to = "run"},
+			{name = "Ran", from = "inspect", to = "run"},
+			{name = "Ran", from = "reload", to = "run"},
+			{name = "Ran", from = "aim", to = "run"},
+			{name = "Ran", from = "walk", to = "run"},
+			-- from idle/aim/reload/run to walk
+			{name = "Walk", from = "idle", to = "walk"},
+			{name = "Walk", from = "inspect", to = "walk"},
+			{name = "Walk", from = "reload", to = "walk"},
+			{name = "Walk", from = "aim", to = "walk"},
+			{name = "Walk", from = "run", to = "walk"},
 			-- from inspect/idle to aim
 			{name = "Aimed", from = "reload", to = "aim"},
 			{name = "Aimed", from = "idle", to = "aim"},
+			{name = "Aimed", from = "run", to = "aim"},
+			{name = "Aimed", from = "walk", to = "aim"},
 			-- from aim/idle to reload
 			{name = "Reload", from = "aim", to = "reload" },
 			{name = "Reload", from = "idle", to = "reload" },
+			{name = "Reload", from = "run", to = "reload"},
+			{name = "Reload", from = "walk", to = "reload"},
 			-- from idle to inspect
 			{name = "Inspect", from = "idle", to = "inspect" },
+			{name = "Inspect", from = "run", to = "inspect"},
+			{name = "Inspect", from = "walk", to = "inspect"},
 		},
+
 		callbacks = {
 			on_Equipped = function(self, event, from, to, msg)
 				print('equipped')
@@ -74,7 +97,16 @@ function Module.New()
 				print('inspect')
 				Events.Inspect:Fire(self, event, from, to, msg)
 			end,
+			on_Walk = function(self, event, from, to, msg)
+				print('walk')
+				Events.Walk:Fire(self, event, from, to, msg)
+			end,
+			on_Ran = function(self, event, from, to, msg)
+				print('run')
+				Events.Ran:Fire(self, event, from, to, msg)
+			end,
 		},
+
 	})
 
 	return Events, FiniteStateInstance

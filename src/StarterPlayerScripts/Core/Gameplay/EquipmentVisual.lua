@@ -6,6 +6,7 @@ local LocalPlayer = Players.LocalPlayer
 local LocalModules = require(LocalPlayer:WaitForChild('PlayerScripts'):WaitForChild('Modules'))
 
 local GunStateMachineClass = LocalModules.Classes.GunStateMachine
+local MeleeStateMachineClass = LocalModules.Classes.MeleeStateMachine
 
 local ReplicatedStorage = game:GetService('ReplicatedStorage')
 local ReplicatedAssets = ReplicatedStorage:WaitForChild('Assets')
@@ -19,20 +20,84 @@ local EquipmentFunction = RemoteService:GetRemote('EquipmentFunction', 'RemoteFu
 
 local EquipmentConfig = ReplicatedModules.Defined.EquipmentConfig
 local WeaponsConfig = ReplicatedModules.Defined.WeaponsConfig
-
 local ModelUtility = ReplicatedModules.Utility.Models
 
 local SystemsContainer = {}
+
+local EquippedID = false
+local EquippedConfig = false
+
+local ActiveStateMachineEvents = false
+local ActiveStateMachineInstance = false
+
 
 -- // Module // --
 local Module = {}
 
 --[[
-	run the unequip animation and keep limbs offscreen
-	until equip animation is called
+	Run the unequip animation and keep limbs offscreen
+	until equip animation is called.
 ]]
-function Module:UpdateStateMachine()
-	print('update state machine')
+function Module:SetupStateMachineEvents()
+	if not ActiveStateMachineEvents then
+		warn('No active state machine events')
+		return
+	end
+	print(ActiveStateMachineEvents)
+end
+
+--[[
+	reset the current state machine entirely,
+	updates the state machine to match for what type of
+	item is equipped.
+]]
+function Module:ResetStateMachine()
+	print('reset the state machine')
+	if not EquippedID then
+		warn('No Equipment Equipped. Cannot create animation state machine.')
+		return
+	end
+
+	print(EquippedID)
+	local equipmentConfig = WeaponsConfig:GetConfigByID(EquippedID) or EquipmentConfig:GetConfigByID(EquippedID)
+	if not equipmentConfig then
+		warn('Invalid equipment given ID ; ', EquippedID)
+		return
+	end
+
+	EquippedConfig = equipmentConfig
+	ActiveStateMachineEvents, ActiveStateMachineInstance = nil, nil
+
+	-- print(equipmentConfig.Type)
+	if equipmentConfig.Type == 'Gun' then
+		print('gun state machine')
+		ActiveStateMachineEvents, ActiveStateMachineInstance = GunStateMachineClass.New()
+	elseif equipmentConfig.Type == 'Melee' then
+		print('melee state machine')
+		ActiveStateMachineEvents, ActiveStateMachineInstance = MeleeStateMachineClass.New()
+	elseif equipmentConfig.Type == 'Equipment' then
+		print('equipment state machine')
+	elseif equipmentConfig.Type == 'Utility' then
+		print('utility state machine')
+	elseif equipmentConfig.Type == 'Misc' then
+		print('misc state machine')
+	end
+	if ActiveStateMachineInstance and ActiveStateMachineInstance then
+		print('setup state machine events')
+		Module:SetupStateMachineEvents()
+	end
+end
+
+--[[
+	Try set the state machine state so that animations
+	match with the action the user is trying to do
+]]
+function Module:AttemptSetStateMachineState(setState)
+	if not ActiveStateMachineInstance then
+		warn('No active state machine')
+		return
+	end
+	print('try set machine state ', setState)
 end
 
 --[[
@@ -42,7 +107,6 @@ end
 ]]
 local EquippedCache = {}
 function Module:SetEquipped( PlayerInstance, equippedID )
-	warn('Change model / animations / etc to fit weapon of type : ', equippedID)
 	local configTable = WeaponsConfig:GetConfigByID(equippedID) or EquipmentConfig:GetConfigByID(equippedID)
 	if not configTable then
 		warn('No Config can be found for ID ', equippedID)
@@ -69,14 +133,13 @@ function Module:SetEquipped( PlayerInstance, equippedID )
 	EquippedCache[PlayerInstance] = ModelInstance
 
 	if PlayerInstance == LocalPlayer then
-		Module:UpdateStateMachine()
+		EquippedID = equippedID
+		Module:ResetStateMachine()
 	end
 end
 
 function Module:Equip( keycodeEnum )
-	task.spawn(function()
-		Module:UnequipAnimation()
-	end)
+	Module:AttemptSetStateMachineState('unequip')
 	--[[
 		by this point the weapon should be offscreen as "unequipped"
 		if it isnt then it'll swap out of the player's current weapon
@@ -89,7 +152,7 @@ function Module:Equip( keycodeEnum )
 	else
 		warn('Failed to equip ', keycodeEnum, ' - ', data)
 	end
-	Module:EquipAnimation()
+	Module:AttemptSetStateMachineState('equip')
 end
 
 function Module:Init( otherSystems )

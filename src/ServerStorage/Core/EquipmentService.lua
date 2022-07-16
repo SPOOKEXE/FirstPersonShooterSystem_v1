@@ -25,18 +25,22 @@ local KeyCodeToIndex = {
 local Module = {}
 
 function Module:SetPlayerLoadout( LocalPlayer, LoadoutData )
-	print(LocalPlayer, LoadoutData)
 	EquipmentCache[LocalPlayer] = LoadoutData
 end
 
 function Module:Equip( LocalPlayer, keycodeEnum )
-	print(LocalPlayer, keycodeEnum)
+	-- print(LocalPlayer, keycodeEnum)
 	local LoadoutIndex = KeyCodeToIndex[keycodeEnum]
 	if not LoadoutIndex then
 		return false, 'Invalid KeyCode passed.'
 	end
-	print(LocalPlayer, LoadoutIndex)
-	return true, EquipmentCache[LocalPlayer][LoadoutIndex].ID
+	local LoadoutWeaponData = EquipmentCache[LocalPlayer][LoadoutIndex]
+	if not LoadoutWeaponData then
+		return false, 'No Weapon Data Available'
+	end
+	-- local WeaponConfigData = ...
+	print(LocalPlayer.Name, LoadoutWeaponData.ID)
+	return true, LoadoutWeaponData.ID
 end
 
 -- do this so the tables aren't linked between all players
