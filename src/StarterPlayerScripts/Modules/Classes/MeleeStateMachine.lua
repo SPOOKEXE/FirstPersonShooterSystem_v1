@@ -10,8 +10,13 @@ local Module = {}
 
 function Module.New()
 	local Events = {
+		-- movement (handled elsewhere)
+		-- Walk = EventClass.New(),
+		-- Ran = EventClass.New(),
+		-- actions
 		Equip = EventClass.New(),
-		Unequip = EventClass.New(),
+		Unequipped = EventClass.New(),
+		Idled = EventClass.New(),
 
 		Charge = EventClass.New(),
 		Swing = EventClass.New(),
@@ -22,11 +27,11 @@ function Module.New()
 		initial = {state = "unequip", event = "init", defer = true},
 		events = {
 			-- to unequip state
-			{name = "Unequip", from = "unequip", to = "unequip"},
-			{name = "Unequip", from = "none", to = "unequip"},
-			{name = "Unequip", from = "equip", to = "unequip"},
-			{name = "Unequip", from = "idle", to = "unequip"},
-			{name = "Unequip", from = "inspect", to = "unequip"},
+			{name = "Unequipped", from = "unequip", to = "unequip"},
+			{name = "Unequipped", from = "none", to = "unequip"},
+			{name = "Unequipped", from = "equip", to = "unequip"},
+			{name = "Unequipped", from = "idle", to = "unequip"},
+			{name = "Unequipped", from = "inspect", to = "unequip"},
 			-- to equip state
 			{name = "Equipped", from = "equip", to = "equip"},
 			{name = "Equipped", from = "none", to = "equip"},
@@ -54,7 +59,7 @@ function Module.New()
 			end,
 			on_Unequip = function(self, event, from, to, msg)
 				print('unequipped')
-				Events.Unequip:Fire(self, event, from, to, msg)
+				Events.Unequipped:Fire(self, event, from, to, msg)
 			end,
 			on_Idled = function(self, event, from, to, msg)
 				print('idled')

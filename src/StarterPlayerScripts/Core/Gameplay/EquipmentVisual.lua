@@ -30,20 +30,19 @@ local EquippedConfig = false
 local ActiveStateMachineEvents = false
 local ActiveStateMachineInstance = false
 
-
 -- // Module // --
 local Module = {}
 
 --[[
-	Run the unequip animation and keep limbs offscreen
+	Run the unequip animation and keep limbs off screen
 	until equip animation is called.
 ]]
 function Module:SetupStateMachineEvents()
-	if not ActiveStateMachineEvents then
+	if (not ActiveStateMachineEvents) or (not EquippedConfig) then
 		warn('No active state machine events')
 		return
 	end
-	print(ActiveStateMachineEvents)
+	print(ActiveStateMachineEvents, EquippedConfig)
 end
 
 --[[
@@ -82,6 +81,7 @@ function Module:ResetStateMachine()
 	elseif equipmentConfig.Type == 'Misc' then
 		print('misc state machine')
 	end
+
 	if ActiveStateMachineInstance and ActiveStateMachineInstance then
 		print('setup state machine events')
 		Module:SetupStateMachineEvents()

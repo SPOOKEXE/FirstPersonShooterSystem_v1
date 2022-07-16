@@ -1,20 +1,48 @@
 
 local Module = { }
 
-Module.Config = {
+Module.Animations = {
+	--[[
+		-- maybe do in class?
+		-- some other method of opening/closing turrets, shooting, etc
+		Turrets = {
+			Auto = {
 
-	Animations = {
-		-- placeable equipment
-		TurretCarry = 'rbxassetid://9219668154',
-		TurretPlace = 'rbxassetid://0',
-		-- grenades
-		GrenadeHold = 'rbxassetid://0',
-		GrenadeThrow = 'rbxassetid://0',
-		-- equipment packs
-		PackHold = 'rbxassetid://0',
-		PackUse = 'rbxassetid://0',
+			},
+			Burst = {
+
+			},
+			Shotgun = {
+
+			},
+			Sniper = {
+
+			},
+			Flamethrower = {
+
+			},
+		},
+	]]
+
+	Player = {
+		Turrets = {
+			Carry = 'rbxassetid://9219668154',
+			Place = 'rbxassetid://0',
+		},
+		Grenade = {
+			Arm = 'rbxassetid://0',
+			Cook = 'rbxassetid://0',
+			Throw = 'rbxassetid://0',
+		},
+		ResourcePacks = {
+			Hold = 'rbxassetid://0',
+			Use = 'rbxassetid://0',
+		},
+		Glowsticks = {
+			Hold = 'rbxassetid://0',
+			Use = 'rbxassetid://0',
+		},
 	},
-
 }
 
 Module.Equipment = {
@@ -23,18 +51,32 @@ Module.Equipment = {
 		Model = 'TurretBurst',
 		Slot = 4, -- equipment slot
 		Type = 'Equipment',
+
+		-- Animations = Module.Animations.Player.Turrets,
 	},
 	{
 		ID = 'AmmoPack',
 		Model = 'AmmoPack',
 		Slot = 5, -- ammo pack slot
 		Type = 'Utility',
+
+		Animations = Module.Animations.Player.ResourcePacks,
 	},
 	{
 		ID = 'Glowsticks',
 		Model = 'Glowsticks',
 		Slot = 6, -- misc slot
 		Type = 'Misc',
+
+		Animations = Module.Animations.Player.Glowsticks
+	},
+	{
+		ID = 'SemtexGrenade',
+		Model = 'Semtex',
+		Slot = false, -- grenade slot is handled via keybind
+		Type = 'Grenade',
+
+		Animations = Module.Animations.Player.Grenade,
 	}
 }
 

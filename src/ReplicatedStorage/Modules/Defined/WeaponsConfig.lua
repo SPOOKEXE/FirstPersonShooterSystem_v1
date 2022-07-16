@@ -1,15 +1,25 @@
 
+local function CreateAnimationsFromBase(Overwrite)
+	local Default = {
+		Equipped = 'rbxassetid://0',
+		Idled = 'rbxassetid://0',
+		Walk = 'rbxassetid://0',
+		Ran = 'rbxassetid://0',
+		Unequip = 'rbxassetid://0',
+
+		Aimed = 'rbxassetid://0',
+		Reload = 'rbxassetid://0',
+		Inspect = 'rbxassetid://0',
+		Shoot = 'rbxassetid://0',
+	}
+	for k, v in pairs(Overwrite) do
+		Default[k] = v
+	end
+	return Default
+end
+
+-- // Module // --
 local Module = { }
-
-Module.Config = {
-
-	Animations = {
-		ADS_Animation = 'rbxassetid://9219668154',
-		Run_Animation = 'rbxassetid://9224250342',
-		Reload_Animation = 'rbxassetid://9228833409',
-	},
-
-}
 
 Module.Weapons = {
 	{
@@ -49,6 +59,7 @@ Module.Weapons = {
 			Shoot = 0,
 		},
 
+		Animations = CreateAnimationsFromBase({ }),
 	},
 	{
 		ID = 'Glock19',
@@ -87,6 +98,7 @@ Module.Weapons = {
 			Shoot = 0,
 		},
 
+		Animations = CreateAnimationsFromBase({ }),
 	},
 	{
 		ID = 'MeleeMace',
@@ -116,6 +128,8 @@ Module.Weapons = {
 			Charge = 0,
 			Hit = 0,
 		},
+
+		Animations = CreateAnimationsFromBase({ }),
 	},
 }
 
