@@ -7,6 +7,7 @@ local LocalModules = require(LocalPlayer:WaitForChild('PlayerScripts'):WaitForCh
 
 local GunStateMachineClass = LocalModules.Classes.GunStateMachine
 local MeleeStateMachineClass = LocalModules.Classes.MeleeStateMachine
+local CharacterStateMachineClass = LocalModules.Classes.CharacterStateMachine
 
 local ReplicatedStorage = game:GetService('ReplicatedStorage')
 local ReplicatedAssets = ReplicatedStorage:WaitForChild('Assets')
@@ -30,8 +31,35 @@ local EquippedConfig = false
 local ActiveStateMachineEvents = false
 local ActiveStateMachineInstance = false
 
+local Humanoid = false
+
+local AnimationMachineEvents = false
+local CharacterAnimationMachineInstance = false
+
+local LoadedAnimations = {}
+
+local function GetCachedAnimationObject( AnimationId )
+	local animObj = script:FindFirstChild(AnimationId)
+	if not animObj then
+		animObj = Instance.new('Animation')
+		animObj.Name = AnimationId
+		animObj.Parent = script
+	end
+	return animObj
+end
+
 -- // Module // --
 local Module = {}
+
+function Module:LoadAnimation( AnimationName, AnimationID )
+	local LoadedAnimation = LoadedAnimations[AnimationName]
+	if not LoadedAnimation then
+		local AnimObj = GetCachedAnimationObject( AnimationID )
+		LoadedAnimation = LocalPlayer.Character.Humanoid.Animator:LoadAnimation(AnimObj)
+		LoadedAnimations[AnimationName] = LoadedAnimation
+	end
+	return LoadedAnimation
+end
 
 --[[
 	Run the unequip animation and keep limbs off screen
@@ -43,6 +71,10 @@ function Module:SetupStateMachineEvents()
 		return
 	end
 	print(ActiveStateMachineEvents, EquippedConfig)
+
+	for animationName, animID in pairs( EquippedConfig.Animations ) do
+		Module:LoadAnimation( animationName, animID )
+	end
 end
 
 --[[
@@ -155,17 +187,54 @@ function Module:Equip( keycodeEnum )
 	Module:AttemptSetStateMachineState('equip')
 end
 
+function Module:AttemptSetCharacterState(newState)
+	if CharacterAnimationMachineInstance.can(newState) then
+		CharacterAnimationMachineInstance[newState]()
+	else
+		warn('can not go from current character animation state to ', newState)
+	end
+end
+
+function Module:CharacterAdded( NewCharacter )
+	LoadedAnimations = {}
+	CharacterAnimationMachineInstance, AnimationMachineEvents = CharacterStateMachineClass.New()
+
+	for eventName, eventSignal in pairs(AnimationMachineEvents) do
+		eventSignal:Connect(function()
+			print(eventName, ' is the new state of the character')
+		end)
+	end
+
+	Humanoid = NewCharacter:WaitForChild('Humanoid') :: Humanoid
+
+	Humanoid.Died:Connect(function()
+		CharacterAnimationMachineInstance = false
+		AnimationMachineEvents = false
+		Humanoid = false
+	end)
+
+	Humanoid.Running:Connect(function(speed)
+		if speed > 0 then
+			Module:AttemptSetCharacterState(speed > 6 and 'run' or 'walk')
+		else
+			Module:AttemptSetCharacterState('idle')
+		end
+	end)
+
+	task.wait()
+
+	Module:Equip(Enum.KeyCode.Three) -- default to the melee
+end
+
 function Module:Init( otherSystems )
 	SystemsContainer = otherSystems
 
 	task.defer(function()
-		-- default to the melee
-		Module:Equip(Enum.KeyCode.Three)
+		Module:CharacterAdded( LocalPlayer.Character )
 	end)
 
 	-- Primary, Secondary, Melee, Equipment, Utility Pack, Extra
 	local SlotNumbers = {Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three, Enum.KeyCode.Four, Enum.KeyCode.Five, Enum.KeyCode.Six}
-
 	ContextActionService:BindAction('EquipWeapon', function(actionName, inputState, inputObject)
 		if actionName == 'EquipWeapon' and inputState == Enum.UserInputState.Begin then
 			Module:Equip( inputObject.KeyCode )
@@ -173,6 +242,10 @@ function Module:Init( otherSystems )
 		end
 		return Enum.ContextActionResult.Pass
 	end, false, unpack(SlotNumbers))
+
+	LocalPlayer.CharacterAdded:Connect(function( NewCharacter )
+		Module:CharacterAdded( NewCharacter )
+	end)
 
 end
 

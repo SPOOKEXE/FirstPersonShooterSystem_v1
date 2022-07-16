@@ -10,23 +10,15 @@ local Module = {}
 
 function Module.New()
 	local Events = {
-		-- movement (handled elsewhere)
-		-- Walk = EventClass.New(),
-		-- Ran = EventClass.New(),
-		-- actions
-		Equip = EventClass.New(),
-		Unequip = EventClass.New(),
+		Walk = EventClass.New(),
+		Ran = EventClass.New(),
 		Idled = EventClass.New(),
-
-		Aimed = EventClass.New(),
-		Reload = EventClass.New(),
-		Inspect = EventClass.New(),
+		Crouched = EventClass.New(),
+		Jump  = EventClass.New(),
 	}
 
 	local FiniteStateInstance = FiniteStateMachineClass.create({
-
 		initial = { state = "unequip", event = "init", defer = true },
-
 		events = {
 			-- to unequip state
 			{name = "Unequipped", from = "unequip", to = "unequip"},
