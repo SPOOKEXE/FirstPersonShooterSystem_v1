@@ -80,7 +80,7 @@ function Module.New()
 		},
 	})
 
-	return Events, FiniteStateInstance
+	return FiniteStateInstance, Events
 end
 
 return Module

@@ -4,6 +4,8 @@ local LocalPlayer = Players.LocalPlayer
 
 local SystemsContainer = {}
 
+local Humanoid = false :: Humanoid
+
 -- // Module // --
 local Module = {}
 
@@ -16,6 +18,10 @@ end
 -- find the next state from the current state
 -- returns that state string
 function Module:FindNextState( currentState ) : string
+	
+end
+
+function Module:ToState( stateString )
 	
 end
 
@@ -51,8 +57,33 @@ function Module:ToCrouchState()
 	
 end
 
-function Module:SetupHumanoidConnections()
-	
+function Module:SetupHumanoidConnections( NewCharacter )
+
+	for eventName, eventSignal in pairs(AnimationMachineEvents) do
+
+		print(eventName, tostring(eventSignal))
+		eventSignal:Connect(function()
+			print(eventName, ' is the new state of the character')
+		end)
+
+	end
+
+	Humanoid = NewCharacter:WaitForChild('Humanoid') :: Humanoid
+
+	Humanoid.Died:Connect(function()
+		CharacterAnimationMachineInstance = false
+		AnimationMachineEvents = false
+		Humanoid = false
+	end)
+
+	Humanoid.Running:Connect(function(speed)
+		if speed > 0 then
+			Module:AttemptSetCharacterState(speed > 6 and 'run' or 'walk')
+		else
+			Module:AttemptSetCharacterState('idle')
+		end
+	end)
+
 end
 
 function Module:CharacterAdded( NewCharacter )

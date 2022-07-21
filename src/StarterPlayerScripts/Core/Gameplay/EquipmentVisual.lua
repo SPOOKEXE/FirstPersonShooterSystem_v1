@@ -52,6 +52,9 @@ end
 local Module = {}
 
 function Module:LoadAnimation( AnimationName, AnimationID )
+	if AnimationID == 'rbxassetid://0' or AnimationID == 'rbxassetid://' then
+		return false
+	end
 	local LoadedAnimation = LoadedAnimations[AnimationName]
 	if not LoadedAnimation then
 		local AnimObj = GetCachedAnimationObject( AnimationID )
@@ -70,10 +73,13 @@ function Module:SetupStateMachineEvents()
 		warn('No active state machine events')
 		return
 	end
-	print(ActiveStateMachineEvents, EquippedConfig)
-
+	-- print(ActiveStateMachineEvents, EquippedConfig)
 	for animationName, animID in pairs( EquippedConfig.Animations ) do
 		Module:LoadAnimation( animationName, animID )
+	end
+
+	if ActiveStateMachineInstance then
+		ActiveStateMachineInstance.init()
 	end
 end
 
@@ -97,15 +103,15 @@ function Module:ResetStateMachine()
 	end
 
 	EquippedConfig = equipmentConfig
-	ActiveStateMachineEvents, ActiveStateMachineInstance = nil, nil
+	ActiveStateMachineInstance, ActiveStateMachineEvents = nil, nil
 
 	-- print(equipmentConfig.Type)
 	if equipmentConfig.Type == 'Gun' then
 		print('gun state machine')
-		ActiveStateMachineEvents, ActiveStateMachineInstance = GunStateMachineClass.New()
+		ActiveStateMachineInstance, ActiveStateMachineEvents = GunStateMachineClass.New()
 	elseif equipmentConfig.Type == 'Melee' then
 		print('melee state machine')
-		ActiveStateMachineEvents, ActiveStateMachineInstance = MeleeStateMachineClass.New()
+		ActiveStateMachineInstance, ActiveStateMachineEvents = MeleeStateMachineClass.New()
 	elseif equipmentConfig.Type == 'Equipment' then
 		print('equipment state machine')
 	elseif equipmentConfig.Type == 'Utility' then
@@ -114,7 +120,7 @@ function Module:ResetStateMachine()
 		print('misc state machine')
 	end
 
-	if ActiveStateMachineInstance and ActiveStateMachineInstance then
+	if ActiveStateMachineInstance and ActiveStateMachineEvents then
 		print('setup state machine events')
 		Module:SetupStateMachineEvents()
 	end
@@ -178,7 +184,7 @@ function Module:Equip( keycodeEnum )
 		that is in their hands.
 	]]
 	local success, data = EquipmentFunction:InvokeServer(keycodeEnum)
-	print(success, data)
+	-- print(success, data)
 	if success then
 		Module:SetEquipped( LocalPlayer, data )
 	else
@@ -188,7 +194,8 @@ function Module:Equip( keycodeEnum )
 end
 
 function Module:AttemptSetCharacterState(newState)
-	if CharacterAnimationMachineInstance.can(newState) then
+	print(CharacterAnimationMachineInstance and CharacterAnimationMachineInstance.current, newState)
+	if CharacterAnimationMachineInstance and CharacterAnimationMachineInstance.can(newState) then
 		CharacterAnimationMachineInstance[newState]()
 	else
 		warn('can not go from current character animation state to ', newState)
@@ -199,27 +206,7 @@ function Module:CharacterAdded( NewCharacter )
 	LoadedAnimations = {}
 	CharacterAnimationMachineInstance, AnimationMachineEvents = CharacterStateMachineClass.New()
 
-	for eventName, eventSignal in pairs(AnimationMachineEvents) do
-		eventSignal:Connect(function()
-			print(eventName, ' is the new state of the character')
-		end)
-	end
-
-	Humanoid = NewCharacter:WaitForChild('Humanoid') :: Humanoid
-
-	Humanoid.Died:Connect(function()
-		CharacterAnimationMachineInstance = false
-		AnimationMachineEvents = false
-		Humanoid = false
-	end)
-
-	Humanoid.Running:Connect(function(speed)
-		if speed > 0 then
-			Module:AttemptSetCharacterState(speed > 6 and 'run' or 'walk')
-		else
-			Module:AttemptSetCharacterState('idle')
-		end
-	end)
+	
 
 	task.wait()
 
